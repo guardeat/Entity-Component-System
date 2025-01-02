@@ -35,6 +35,8 @@ namespace Byte {
 
 		virtual size_t size() const = 0;
 
+		virtual void reserve(size_t newCapacity) = 0;
+
 		virtual size_t capacity() const = 0;
 
 		virtual void clear() = 0;
@@ -85,6 +87,10 @@ namespace Byte {
 
 		size_t size() const override {
 			return container.size();
+		}
+
+		void reserve(size_t newCapacity) override {
+			container.reserve(newCapacity);
 		}
 
 		size_t capacity() const override {

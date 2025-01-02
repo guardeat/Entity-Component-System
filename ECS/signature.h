@@ -19,21 +19,20 @@ namespace Byte {
 		using BitsetArray = std::array<Bitset, BITSET_COUNT>;
 
 	private:
-		BitsetArray bitsets;
+		BitsetArray _bitsets;
 
 	public:
 		void set(ComponentID id, bool value = true) {
-			bitsets[id / BITSET_SIZE].set(id % BITSET_SIZE, value);
+			_bitsets[id / BITSET_SIZE].set(id % BITSET_SIZE, value);
 		}
 
 		bool test(ComponentID id) const {
-			return bitsets[id / BITSET_SIZE].test(id % BITSET_SIZE);
+			return _bitsets[id / BITSET_SIZE].test(id % BITSET_SIZE);
 		}
-
 
 		bool includes(const Signature& signature) const {
 			for (size_t index{}; index < BITSET_COUNT; ++index) {
-				if ((bitsets[index] | signature.bitsets[index]) != bitsets[index]) {
+				if ((_bitsets[index] | signature._bitsets[index]) != _bitsets[index]) {
 					return false;
 				}
 			}
@@ -42,7 +41,7 @@ namespace Byte {
 
 		bool matches(const Signature& signature) const {
 			for (size_t index{}; index < BITSET_COUNT; ++index) {
-				if ((bitsets[index] & signature.bitsets[index]) > 0) {
+				if ((_bitsets[index] & signature._bitsets[index]) > 0) {
 					return true;
 				}
 			}
@@ -50,7 +49,7 @@ namespace Byte {
 		}
 
 		bool any() const {
-			for (Bitset bitset: bitsets) {
+			for (Bitset bitset: _bitsets) {
 				if (bitset.any()) {
 					return true;
 				}
@@ -60,7 +59,7 @@ namespace Byte {
 
 		bool operator==(const Signature& other) const {
 			for (size_t index{}; index < BITSET_COUNT; ++index) {
-				if (bitsets[index] != other.bitsets[index]) {
+				if (_bitsets[index] != other._bitsets[index]) {
 					return false;
 				}
 			}
@@ -74,20 +73,20 @@ namespace Byte {
 		Signature operator+(const Signature& other) const {
 			Signature out;
 			for (size_t i = 0; i < BITSET_COUNT; ++i) {
-				out.bitsets[i] = bitsets[i] | other.bitsets[i];
+				out._bitsets[i] = _bitsets[i] | other._bitsets[i];
 			}
 			return out;
 		}
 
 		Signature& operator+=(const Signature& other) {
 			for (size_t i = 0; i < BITSET_COUNT; ++i) {
-				bitsets[i] |= other.bitsets[i];
+				_bitsets[i] |= other._bitsets[i];
 			}
 			return *this;
 		}
 
 		const BitsetArray& data() const {
-			return bitsets;
+			return _bitsets;
 		}
 
 		template<typename... Components>

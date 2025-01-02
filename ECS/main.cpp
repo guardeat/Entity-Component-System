@@ -1,13 +1,11 @@
-#include <iostream>
-
 #include "ecs.h"
 
 using namespace Byte;
 
+//TODO: Implement a hashmap for faster include.
+
 int main() {
 	World world;
 
-	EntityID id{ world.createEntity(17, 11.7f) };
-
-	std::cout << world.get<float>(id);
+	auto ids{ Spawner<World>::spawn(world,100000,1,1.0,1U) };
 }

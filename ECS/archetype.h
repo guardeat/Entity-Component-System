@@ -30,7 +30,7 @@ namespace Byte {
 		using Signature = Signature<MAX_COMPONENT_COUNT>;
 		
 	private:
-		AccessorMap accessors;
+		AccessorMap _accessors;
 		Signature _signature;
 
 	public:
@@ -64,22 +64,22 @@ namespace Byte {
 
 		template<typename Component>
 		void pushComponent(Component&& component) {
-			accessors[Registry<Component>::id()]->receive<Component>().pushBack(std::move(component));
+			_accessors[Registry<Component>::id()]->receive<Component>().pushBack(std::move(component));
 		}
 
 		template<typename Component, typename... Args>
 		void emplaceComponent(Args&&... args) {
-			accessors[Registry<Component>::id()]->receive<Component>().emplaceBack(std::forward<Args>(args)...);
+			_accessors[Registry<Component>::id()]->receive<Component>().emplaceBack(std::forward<Args>(args)...);
 		}
 
 		template<typename Component>
 		Component& getComponent(size_t index) {
-			return accessors[Registry<Component>::id()]->receive<Component>().get(index);
+			return _accessors[Registry<Component>::id()]->receive<Component>().get(index);
 		}
 
 		template<typename Component>
 		const Component& getComponent(size_t index) const {
-			return accessors[Registry<Component>::id()]->receive<Component>().get(index);
+			return _accessors[Registry<Component>::id()]->receive<Component>().get(index);
 		}
 
 		EntityID erase(size_t index) {
@@ -87,7 +87,7 @@ namespace Byte {
 
 			EntityID out{ getComponent<EntityID>(lastIndex) };
 
-			for (auto& pair : accessors) {
+			for (auto& pair : _accessors) {
 				pair.second->swapComponents(index, lastIndex);
 				pair.second->popBack();
 			}
@@ -97,9 +97,9 @@ namespace Byte {
 
 		size_t carryEntity(size_t index, EntityID id, Archetype& from) {
 			pushEntity(id);
-			for (auto& pair : from.accessors) {
-				auto accessor{ accessors.find(pair.first) };
-				if (accessor != accessors.end()) {
+			for (auto& pair : from._accessors) {
+				auto accessor{ _accessors.find(pair.first) };
+				if (accessor != _accessors.end()) {
 					accessor->second->carryComponent(index, pair.second);
 				}
 			}
@@ -108,9 +108,9 @@ namespace Byte {
 
 		size_t copyEntity(size_t index, EntityID id, const Archetype& from) {
 			pushEntity(id);
-			for (auto& pair : from.accessors) {
-				auto accessor{ accessors.find(pair.first) };
-				if (accessor != accessors.end()) {
+			for (auto& pair : from._accessors) {
+				auto accessor{ _accessors.find(pair.first) };
+				if (accessor != _accessors.end()) {
 					accessor->second->copyComponent(index, pair.second);
 				}
 			}
@@ -118,11 +118,11 @@ namespace Byte {
 		}
 
 		size_t size() const {
-			return accessors.at(Registry<EntityID>::id())->size();
+			return _accessors.at(Registry<EntityID>::id())->size();
 		}
 
 		bool empty() const {
-			return accessors.at(Registry<EntityID>::id())->size() == 0;
+			return _accessors.at(Registry<EntityID>::id())->size() == 0;
 		}
 
 		Archetype copy() const {
@@ -130,28 +130,34 @@ namespace Byte {
 
 			out._signature = _signature;
 
-			for (auto& pair : accessors) {
-				out.accessors.emplace(pair.first, pair.second->copy());
+			for (auto& pair : _accessors) {
+				out._accessors.emplace(pair.first, pair.second->copy());
 			}
 
 			return out;
 		}
 		
 		void clear() {
-			for (auto& pair : accessors) {
+			for (auto& pair : _accessors) {
 				pair.second->clear();
 			}
 		}
 
 		template<typename Component>
 		void emplaceAccessor() {
-			accessors.emplace(Registry<Component>::id(), std::make_unique<Accessor<Component>>());
+			_accessors.emplace(Registry<Component>::id(), std::make_unique<Accessor<Component>>());
 			_signature.set(Registry<Component>::id());
 		}
 
 		void eraseAccessor(ComponentID id) {
-			accessors.erase(id);
+			_accessors.erase(id);
 			_signature.set(id, false);
+		}
+
+		void reserve(size_t newCapacity) {
+			for (auto& pair : _accessors) {
+				pair.second->reserve(newCapacity);
+			}
 		}
 
 		template<typename... Components>
@@ -166,8 +172,8 @@ namespace Byte {
 		static Archetype build(Archetype& source) {
 			Archetype out{ build<Components...>() };
 
-			for (auto& pair : source.accessors) {
-				out.accessors[pair.first] = pair.second->instance();
+			for (auto& pair : source._accessors) {
+				out._accessors[pair.first] = pair.second->instance();
 				out._signature.set(pair.first);
 			}
 			return out;
@@ -178,9 +184,9 @@ namespace Byte {
 			out._signature = source._signature;
 			out._signature.set(without, false);
 
-			for (auto& pair : source.accessors) {
+			for (auto& pair : source._accessors) {
 				if (pair.first != without) {
-					out.accessors[pair.first] = pair.second->instance();
+					out._accessors[pair.first] = pair.second->instance();
 				}
 			}
 			return out;
@@ -199,7 +205,7 @@ namespace Byte {
 			Cache() = default;
 
 			Cache(Archetype& arche) {
-				((_accessors.push_back(arche.accessors.at(Registry<Components>::id()).get())), ...);
+				((_accessors.push_back(arche._accessors.at(Registry<Components>::id()).get())), ...);
 			}
 
 			ComponentGroup group(size_t index) {
