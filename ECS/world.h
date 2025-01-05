@@ -28,7 +28,7 @@ namespace Byte {
 		using ArcheMap = std::unordered_map<Signature, Archetype>;
 
 		struct EntityData {
-			size_t index;
+			size_t index{};
 			Archetype* arche{ nullptr };
 		};
 
