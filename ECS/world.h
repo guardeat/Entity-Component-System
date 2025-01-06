@@ -7,6 +7,7 @@
 #include "archetype.h"
 #include "component.h"
 #include "signature.h"
+#include "hash_map.h"
 
 namespace Byte {
 
@@ -32,7 +33,7 @@ namespace Byte {
 			Archetype* arche{ nullptr };
 		};
 
-		using EntityMap = std::unordered_map<EntityID, EntityData>;
+		using EntityMap = hash_map<EntityID, EntityData>;
 
 	private:
 		template<typename WorldType>
@@ -45,7 +46,7 @@ namespace Byte {
 		_World() = default;
 
 		_World(const _World& left)
-			: _World{ copy() } {
+			: _World{ left.copy() } {
 		}
 
 		_World(_World&& right) noexcept = default;
@@ -66,26 +67,31 @@ namespace Byte {
 		template<typename Component, typename... Components>
 		EntityID createEntity(Component&& component, Components&&... components) {
 			EntityID out{ createEntity() };
-			attach(out, std::forward<Component>(component), std::forward<Components...>(components)...);
+			attach(out, std::forward<Component>(component), std::forward<Components>(components)...);
 			return out;
 		}
 
 		void destroyEntity(EntityID id) {
-			_entities[id].arche->erase(_entities[id].index);
+			EntityData& data{ _entities.at(id) };
+			data.arche->erase(data.index);
 			_entities.erase(id);
 		}
 
 		EntityID copyEntity(EntityID source) {
 			EntityID out{ createEntity() };
-			_entities[source].arche->copyEntity(_entities[source], out, *_entities[source].arche);
-			_entities[out].arche = _entities[source].arche;
+			EntityData& sourceData{ _entities.at(source) };
+			sourceData.arche->copyEntity(sourceData.index, out, *sourceData.arche);
+			_entities.at(out).arche = sourceData.arche;
+			return out;
 		}
 
 		template<typename Component, typename... Components>
 		void attach(EntityID id, Component&& component, Components&&... components) {
-			Signature signature{ Signature::template build<Component,Components...>() };
+			Signature signature{ Signature::template build<EntityID,Component,Components...>() };
 
-			Archetype* oldArche{ _entities[id].arche };
+			EntityData& data{ _entities.at(id) };
+
+			Archetype* oldArche{ data.arche };
 			Archetype* newArche{ nullptr };
 
 			if (oldArche) {
@@ -98,19 +104,19 @@ namespace Byte {
 			}
 			else {
 				if (oldArche) {
-					_arches[signature] = Archetype::template build<Component, Components...>(*oldArche);
+					_arches.emplace(signature,Archetype::template build<Component, Components...>(*oldArche));
 				}
 				else {
-					_arches[signature] = Archetype::template build<Component, Components...>();
+					_arches.emplace(signature,Archetype::template build<Component, Components...>());
 				}
 				newArche = &_arches[signature];
 			}
 
 			size_t newIndex;
 			if (oldArche) {
-				newIndex = newArche->carryEntity(_entities[id].index, id, *oldArche);
+				newIndex = newArche->carryEntity(data.index, id, *oldArche);
 
-				EntityID changedEntity{ oldArche->erase(_entities[id].index) };
+				EntityID changedEntity{ oldArche->erase(data.index) };
 				_entities[changedEntity].index = _entities[id].index;
 			}
 			else {
@@ -120,13 +126,15 @@ namespace Byte {
 			newArche->pushComponent<Component>(std::forward<Component>(component));
 			(newArche->pushComponent<Components>(std::forward<Components>(components)), ...);
 
-			_entities[id].arche = newArche;
-			_entities[id].index = newIndex;
+			data.arche = newArche;
+			data.index = newIndex;
 		}
 
 		template<typename Component>
 		void detach(EntityID id) {
-			Archetype* oldArche{ _entities[id].arche };
+			EntityData& data{ _entities.at(id) };
+
+			Archetype* oldArche{ data.arche };
 
 			Signature signature{ oldArche->signature() };
 			signature.set(Registry<Component>::id(), false);
@@ -138,34 +146,36 @@ namespace Byte {
 				auto result{ _arches.find(signature) };
 
 				if (result == _arches.end()) {
-					_arches[signature] = Archetype::build(*oldArche, Registry<Component>::id());
+					_arches.emplace(signature, Archetype::build(*oldArche, Registry<Component>::id()));
 					newArche = &_arches[signature];
 				}
 				else {
 					newArche = &result->second;
 				}
-				newIndex = newArche->carryEntity(_entities[id].index, id, *oldArche);
+				newIndex = newArche->carryEntity(data.index, id, *oldArche);
 			}
-			EntityID changedEntity{ oldArche->erase(_entities[id].index) };
-			_entities[changedEntity].index = _entities[id].index;
+			EntityID changedEntity{ oldArche->erase(data.index) };
+			_entities[changedEntity].index = data.index;
 
-			_entities[id].index = newIndex;
-			_entities[id].arche = newArche;
+			data.index = newIndex;
+			data.arche = newArche;
 		}
 
 		template<typename Component>
 		Component& get(EntityID id) {
-			return _entities[id].arche->getComponent<Component>(_entities[id].index);
+			EntityData& data{ _entities.at(id) };
+			return data.arche->getComponent<Component>(data.index);
 		}
 
 		template<typename Component>
 		const Component& get(EntityID id) const {
-			return _entities[id].arche->getComponent<Component>(_entities[id].index);
+			EntityData& data{ _entities.at(id) };
+			return data.arche->getComponent<Component>(data.index);
 		}
 
 		template<typename Component>
 		bool has(EntityID id) {
-			Archetype* arche{ _entities[id].arche };
+			Archetype* arche{ _entities.at(id).arche };
 
 			if (arche) {
 				return arche->signature().test(Registry<Component>::id());
@@ -183,8 +193,10 @@ namespace Byte {
 			out._arches = _arches;
 			out._entities = _entities;
 
-			for (auto it{ _entities.begin() }; it < _entities.end(); ++it) {
-				out._entities[it.index()] = &out._arches[it->arche->signature];
+			for (auto pair: _entities) {
+				auto& test{ out._entities.at(pair.first) };
+				auto& test2{ out._arches.at(pair.second.arche->signature()) };
+				out._entities.at(pair.first).arche = &out._arches.at(pair.second.arche->signature());
 			}
 
 			return out;

@@ -38,10 +38,14 @@ namespace Byte {
 
 			IDContainer out;
 			out.reserve(dest->size() + count);
+			world._entities.reserve(count);
 			for (size_t idx{}; idx < count; ++idx) {
 				EntityID id{ world.createEntity() };
-				world._entities[id].arche = dest;
-				world._entities[id].index = push(id, dest, component, components...);
+				typename World::EntityData& data{ world._entities.at(id) };
+
+				data.arche = dest;
+				data.index = push(id, dest, component, components...);
+
 				out.push_back(id);
 			}
 
