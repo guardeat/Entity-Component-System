@@ -73,45 +73,45 @@ namespace Byte {
 		}
 
 		template<typename Component>
-		Component& getComponent(size_t index) {
-			return _accessors[Registry<Component>::id()]->receive<Component>().get(index);
+		Component& getComponent(size_t _index) {
+			return _accessors[Registry<Component>::id()]->receive<Component>().get(_index);
 		}
 
 		template<typename Component>
-		const Component& getComponent(size_t index) const {
-			return _accessors[Registry<Component>::id()]->receive<Component>().get(index);
+		const Component& getComponent(size_t _index) const {
+			return _accessors[Registry<Component>::id()]->receive<Component>().get(_index);
 		}
 
-		EntityID erase(size_t index) {
+		EntityID erase(size_t _index) {
 			size_t lastIndex{ size() - 1 };
 
 			EntityID out{ getComponent<EntityID>(lastIndex) };
 
 			for (auto& pair : _accessors) {
-				pair.second->swapComponents(index, lastIndex);
+				pair.second->swapComponents(_index, lastIndex);
 				pair.second->popBack();
 			}
 
 			return out;
 		}
 
-		size_t carryEntity(size_t index, EntityID id, Archetype& from) {
+		size_t carryEntity(size_t _index, EntityID id, Archetype& from) {
 			pushEntity(id);
 			for (auto& pair : from._accessors) {
 				auto accessor{ _accessors.find(pair.first) };
 				if (accessor != _accessors.end()) {
-					accessor->second->carryComponent(index, pair.second);
+					accessor->second->carryComponent(_index, pair.second);
 				}
 			}
 			return size() - 1;
 		}
 
-		size_t copyEntity(size_t index, EntityID id, const Archetype& from) {
+		size_t copyEntity(size_t _index, EntityID id, const Archetype& from) {
 			pushEntity(id);
 			for (auto& pair : from._accessors) {
 				auto accessor{ _accessors.find(pair.first) };
 				if (accessor != _accessors.end()) {
-					accessor->second->copyComponent(index, pair.second);
+					accessor->second->copyComponent(_index, pair.second);
 				}
 			}
 			return size() - 1;
@@ -208,9 +208,9 @@ namespace Byte {
 				((_accessors.push_back(arche._accessors.at(Registry<Components>::id()).get())), ...);
 			}
 
-			ComponentGroup group(size_t index) {
+			ComponentGroup group(size_t _index) {
 				size_t iterator{ this->_accessors.size() };
-				return ComponentGroup(this->get<Components>(index, --iterator)...);
+				return ComponentGroup(this->get<Components>(_index, --iterator)...);
 			}
 
 			size_t size() const {
@@ -222,14 +222,14 @@ namespace Byte {
 
 		private:
 			template<typename Component>
-			Component& get(size_t index, size_t accessorIndex) {
-				return static_cast<Accessor<Component>*>(_accessors[accessorIndex])->get(index);
+			Component& get(size_t _index, size_t accessorIndex) {
+				return static_cast<Accessor<Component>*>(_accessors[accessorIndex])->get(_index);
 			}
 
 		};
 
 		template<typename... Components>
-		Cache<Components...> cache() {
+		Cache<Components...> _cache() {
 			return Cache<Components...>(*this);
 		}
 

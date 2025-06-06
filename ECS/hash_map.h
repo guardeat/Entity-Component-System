@@ -53,7 +53,7 @@ namespace Byte {
 		node_vector _nodes;
 
 		struct index_node {
-			size_t index{ empty_index };
+			size_t _index{ empty_index };
 			size_t hash_value{};
 		};
 
@@ -74,23 +74,23 @@ namespace Byte {
 		}
 
 		value_type& at(const key_type& key) {
-			size_t index{ find_index(key) };
+			size_t _index{ find_index(key) };
 
-			if (index == empty_index) {
+			if (_index == empty_index) {
 				throw std::out_of_range("Key not found");
 			}
 
-			return _nodes[_indices[index].index].second;
+			return _nodes[_indices[_index]._index].second;
 		}
 
 		const value_type& at(const key_type& key) const {
-			size_t index{ find_index(key) };
+			size_t _index{ find_index(key) };
 
-			if (index == empty_index) {
+			if (_index == empty_index) {
 				throw std::out_of_range("Key not found");
 			}
 
-			return _nodes[_indices[index].index].second;
+			return _nodes[_indices[_index]._index].second;
 		}
 
 		template<typename... _Args >
@@ -98,7 +98,7 @@ namespace Byte {
 			_nodes.emplace_back(std::forward<_Args>(args)...);
 			size_t primary_hash{ _hash(_nodes.back().first) };
 			size_t free_index{ find_free_index(primary_hash) };
-			_indices[free_index].index = _nodes.size() - 1;
+			_indices[free_index]._index = _nodes.size() - 1;
 			_indices[free_index].hash_value = primary_hash;
 
 			if (need_expand()) {
@@ -111,10 +111,10 @@ namespace Byte {
 		}
 
 		value_type& operator[](const key_type& key) {
-			size_t index{ find_index(key) };
+			size_t _index{ find_index(key) };
 
-			if (index != empty_index) {
-				return _nodes[_indices[index].index].second;
+			if (_index != empty_index) {
+				return _nodes[_indices[_index]._index].second;
 			}
 
 			emplace(key,value_type{});
@@ -123,17 +123,17 @@ namespace Byte {
 		}
 
 		iterator find(const key_type& key) {
-			size_t index = find_index(key);
-			if (index != empty_index) {
-				return iterator{ _nodes.begin() + _indices[index].index };
+			size_t _index = find_index(key);
+			if (_index != empty_index) {
+				return iterator{ _nodes.begin() + _indices[_index]._index };
 			}
 			return end();
 		}
 
 		const_iterator find(const key_type& key) const {
-			size_t index = find_index(key);
-			if (index != empty_index) {
-				return const_iterator{ _nodes.begin() + _indices[index].index };
+			size_t _index = find_index(key);
+			if (_index != empty_index) {
+				return const_iterator{ _nodes.begin() + _indices[_index]._index };
 			}
 			return end();
 		}
@@ -143,9 +143,9 @@ namespace Byte {
 
 			if (node_index != empty_index) {
 				size_t back_index{ find_index(_nodes.back().first) };
-				size_t node_pos{ _indices[node_index].index };
-				_indices[back_index].index = _indices[node_index].index;
-				_indices[node_index].index = deleted_index;
+				size_t node_pos{ _indices[node_index]._index };
+				_indices[back_index]._index = _indices[node_index]._index;
+				_indices[node_index]._index = deleted_index;
 
 				std::swap(_nodes[node_pos], _nodes.back());
 
@@ -202,14 +202,14 @@ namespace Byte {
 			return size() * rehash_factor < _indices.size() / rehash_factor;
 		}
 
-		bool full_index(size_t index) const {
-			return _indices[index].index < deleted_index;
+		bool full_index(size_t _index) const {
+			return _indices[_index]._index < deleted_index;
 		}
 
 		size_t find_free_index(size_t primary_hash) const {
 			size_t hash_value{ primary_hash % _indices.size() };
 
-			for (size_t attempt{ 1 }; _indices[hash_value].index != empty_index; ++attempt) {
+			for (size_t attempt{ 1 }; _indices[hash_value]._index != empty_index; ++attempt) {
 				hash_value = _probe(primary_hash, attempt) % _indices.size();
 			}
 
@@ -220,13 +220,13 @@ namespace Byte {
 			size_t primary_hash{ _hash(key) };
 			size_t hash_value{ primary_hash % _indices.size() };
 
-			if (full_index(hash_value) && _equal(_nodes[_indices[hash_value].index].first, key)) {
+			if (full_index(hash_value) && _equal(_nodes[_indices[hash_value]._index].first, key)) {
 				return hash_value;
 			}
 
 			for (size_t attempt{ 1 }; attempt < _indices.size(); ++attempt) {
 				hash_value = _probe(primary_hash, attempt) % _indices.size();
-				if (full_index(hash_value) && _equal(_nodes[_indices[hash_value].index].first, key)) {
+				if (full_index(hash_value) && _equal(_nodes[_indices[hash_value]._index].first, key)) {
 					return hash_value;
 				}
 			}
@@ -240,7 +240,7 @@ namespace Byte {
 			_indices.resize(new_capacity);
 
 			for (size_t idx{}; idx < old_indices.size(); ++idx) {
-				if (old_indices[idx].index < deleted_index) {
+				if (old_indices[idx]._index < deleted_index) {
 					size_t new_index{ find_free_index(old_indices[idx].hash_value) };
 					_indices[new_index] = old_indices[idx];
 				}

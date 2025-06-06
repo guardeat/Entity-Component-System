@@ -31,8 +31,8 @@ namespace Byte {
 		}
 
 		bool includes(const Signature& signature) const {
-			for (size_t index{}; index < BITSET_COUNT; ++index) {
-				if ((_bitsets[index] | signature._bitsets[index]) != _bitsets[index]) {
+			for (size_t _index{}; _index < BITSET_COUNT; ++_index) {
+				if ((_bitsets[_index] | signature._bitsets[_index]) != _bitsets[_index]) {
 					return false;
 				}
 			}
@@ -40,8 +40,8 @@ namespace Byte {
 		}
 
 		bool matches(const Signature& signature) const {
-			for (size_t index{}; index < BITSET_COUNT; ++index) {
-				if ((_bitsets[index] & signature._bitsets[index]) > 0) {
+			for (size_t _index{}; _index < BITSET_COUNT; ++_index) {
+				if ((_bitsets[_index] & signature._bitsets[_index]) > 0) {
 					return true;
 				}
 			}
@@ -58,8 +58,8 @@ namespace Byte {
 		}
 
 		bool operator==(const Signature& other) const {
-			for (size_t index{}; index < BITSET_COUNT; ++index) {
-				if (_bitsets[index] != other._bitsets[index]) {
+			for (size_t _index{}; _index < BITSET_COUNT; ++_index) {
+				if (_bitsets[_index] != other._bitsets[_index]) {
 					return false;
 				}
 			}

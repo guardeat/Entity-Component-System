@@ -29,7 +29,7 @@ namespace Byte {
 		using ArcheMap = std::unordered_map<Signature, Archetype>;
 
 		struct EntityData {
-			size_t index{};
+			size_t _index{};
 			Archetype* arche{ nullptr };
 		};
 
@@ -73,14 +73,14 @@ namespace Byte {
 
 		void destroyEntity(EntityID id) {
 			EntityData& data{ _entities.at(id) };
-			data.arche->erase(data.index);
+			data.arche->erase(data._index);
 			_entities.erase(id);
 		}
 
 		EntityID copyEntity(EntityID source) {
 			EntityID out{ createEntity() };
 			EntityData& sourceData{ _entities.at(source) };
-			sourceData.arche->copyEntity(sourceData.index, out, *sourceData.arche);
+			sourceData.arche->copyEntity(sourceData._index, out, *sourceData.arche);
 			_entities.at(out).arche = sourceData.arche;
 			return out;
 		}
@@ -114,10 +114,10 @@ namespace Byte {
 
 			size_t newIndex;
 			if (oldArche) {
-				newIndex = newArche->carryEntity(data.index, id, *oldArche);
+				newIndex = newArche->carryEntity(data._index, id, *oldArche);
 
-				EntityID changedEntity{ oldArche->erase(data.index) };
-				_entities[changedEntity].index = _entities[id].index;
+				EntityID changedEntity{ oldArche->erase(data._index) };
+				_entities[changedEntity]._index = _entities[id]._index;
 			}
 			else {
 				newIndex = newArche->pushEntity(id);
@@ -127,7 +127,7 @@ namespace Byte {
 			(newArche->pushComponent<Components>(std::forward<Components>(components)), ...);
 
 			data.arche = newArche;
-			data.index = newIndex;
+			data._index = newIndex;
 		}
 
 		template<typename Component>
@@ -152,25 +152,25 @@ namespace Byte {
 				else {
 					newArche = &result->second;
 				}
-				newIndex = newArche->carryEntity(data.index, id, *oldArche);
+				newIndex = newArche->carryEntity(data._index, id, *oldArche);
 			}
-			EntityID changedEntity{ oldArche->erase(data.index) };
-			_entities[changedEntity].index = data.index;
+			EntityID changedEntity{ oldArche->erase(data._index) };
+			_entities[changedEntity]._index = data._index;
 
-			data.index = newIndex;
+			data._index = newIndex;
 			data.arche = newArche;
 		}
 
 		template<typename Component>
 		Component& get(EntityID id) {
 			EntityData& data{ _entities.at(id) };
-			return data.arche->getComponent<Component>(data.index);
+			return data.arche->getComponent<Component>(data._index);
 		}
 
 		template<typename Component>
 		const Component& get(EntityID id) const {
 			EntityData& data{ _entities.at(id) };
-			return data.arche->getComponent<Component>(data.index);
+			return data.arche->getComponent<Component>(data._index);
 		}
 
 		template<typename Component>
@@ -210,27 +210,27 @@ namespace Byte {
 			using ComponentGroup = typename Cache::ComponentGroup;
 
 		private:
-			ArcheVector* arches;
-			size_t cacheIndex;
-			size_t index;
-			Cache cache;
+			ArcheVector* _arches;
+			size_t _cacheIndex;
+			size_t _index;
+			Cache _cache;
 
 		public:
-			ViewIterator(ArcheVector& archeVector, size_t cacheIndex, size_t index)
-				: arches{ &archeVector }, cacheIndex{ cacheIndex }, index{ index } {
-				if (cacheIndex < arches->size()) {
-					cache = Cache{ *arches->at(cacheIndex) };
+			ViewIterator(ArcheVector& _archeVector, size_t _cacheIndex, size_t _index)
+				: _arches{ &_archeVector }, _cacheIndex{ _cacheIndex }, _index{ _index } {
+				if (_cacheIndex < _arches->size()) {
+					_cache = Cache{ *_arches->at(_cacheIndex) };
 				}
 			}
 
 			ViewIterator& operator++() {
-				++index;
+				++_index;
 
-				if (index == cache.size()) {
-					index = 0;
-					++cacheIndex;
-					if (cacheIndex != arches->size()) {
-						cache = Cache{ *arches->at(cacheIndex) };
+				if (_index == _cache.size()) {
+					_index = 0;
+					++_cacheIndex;
+					if (_cacheIndex != _arches->size()) {
+						_cache = Cache{ *_arches->at(_cacheIndex) };
 					}
 				}
 
@@ -238,11 +238,11 @@ namespace Byte {
 			}
 
 			ComponentGroup operator*() {
-				return cache.group(index);
+				return _cache.group(_index);
 			}
 
 			bool operator==(const ViewIterator& left) const {
-				return cacheIndex == left.cacheIndex;
+				return _cacheIndex == left._cacheIndex;
 			}
 
 			bool operator!=(const ViewIterator& left) const {
@@ -258,7 +258,7 @@ namespace Byte {
 			using Iterator = ViewIterator<Components...>;
 
 		private:
-			ArcheVector archeVector;
+			ArcheVector _archeVector;
 
 		public:
 			View(_World& world) {
@@ -266,17 +266,17 @@ namespace Byte {
 
 				for (auto& pair : world._arches) {
 					if (pair.second.signature().includes(signature) && !pair.second.empty()) {
-						archeVector.push_back(&pair.second);
+						_archeVector.push_back(&pair.second);
 					}
 				}
 			}
 
 			Iterator begin() {
-				return Iterator{ archeVector,0,0 };
+				return Iterator{ _archeVector,0,0 };
 			}
 
 			Iterator end() {
-				return Iterator{ archeVector, 0, archeVector.size() };
+				return Iterator{ _archeVector, 0, _archeVector.size() };
 			}
 
 			template<typename... _Components>
@@ -284,13 +284,13 @@ namespace Byte {
 				Signature signature{ Signature::template build<_Components...>() };
 				ArcheVector newArches;
 
-				for (auto arche : archeVector) {
+				for (auto arche : _archeVector) {
 					if (!arche->signature().matches(signature) && !arche->empty()) {
 						newArches.push_back(arche);
 					}
 				}
 
-				archeVector = newArches;
+				_archeVector = newArches;
 			}
 
 			template<typename... _Components>
@@ -298,20 +298,20 @@ namespace Byte {
 				Signature signature{ Signature::template build<_Components...>() };
 				ArcheVector newArches;
 
-				for (auto arche : archeVector) {
+				for (auto arche : _archeVector) {
 					if (!arche->signature().matches(signature) && !arche->empty()) {
 						newArches.push_back(arche);
 					}
 				}
 
-				archeVector = newArches;
+				_archeVector = newArches;
 			}
 
 		};
 
-		template<typename... Components>
-		View<Components...> components() {
-			return View<Components...>{ *this };
+		template<typename... QueryComponents>
+		View<QueryComponents...> components() {
+			return View<QueryComponents...>{ *this };
 		}
 
 	};

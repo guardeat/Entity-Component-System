@@ -44,7 +44,7 @@ namespace Byte {
 				typename World::EntityData& data{ world._entities.at(id) };
 
 				data.arche = dest;
-				data.index = push(id, dest, component, components...);
+				data._index = push(id, dest, component, components...);
 
 				out.push_back(id);
 			}
@@ -59,12 +59,12 @@ namespace Byte {
 			Archetype* dest, 
 			Component component, 
 			Components... components) {
-			size_t index{ dest->pushEntity(id) };
+			size_t _index{ dest->pushEntity(id) };
 
 			dest->pushComponent<Component>(std::forward<Component>(component));
 			(dest->pushComponent<Components>(std::forward<Components>(components)), ...);
 
-			return index;
+			return _index;
 		}
 	};
 

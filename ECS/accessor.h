@@ -25,9 +25,9 @@ namespace Byte {
 
 		virtual UAccessor<Container> carry() = 0;
 
-		virtual void copyComponent(size_t index, const UAccessor<Container>& from) = 0;
+		virtual void copyComponent(size_t _index, const UAccessor<Container>& from) = 0;
 
-		virtual void carryComponent(size_t index, UAccessor<Container>& from) = 0;
+		virtual void carryComponent(size_t _index, UAccessor<Container>& from) = 0;
 
 		virtual void swapComponents(size_t first, size_t second) = 0;
 
@@ -67,14 +67,14 @@ namespace Byte {
 			return std::make_unique<Accessor>(std::move(*this));
 		}
 
-		void copyComponent(size_t index, const UAccessor<Container>& from) override {
+		void copyComponent(size_t _index, const UAccessor<Container>& from) override {
 			Accessor* castedFrom{ static_cast<Accessor*>(from.get()) };
-			container.push_back(castedFrom->get(index));
+			container.push_back(castedFrom->get(_index));
 		}
 
-		void carryComponent(size_t index, UAccessor<Container>& from) override {
+		void carryComponent(size_t _index, UAccessor<Container>& from) override {
 			Accessor* castedFrom{ static_cast<Accessor*>(from.get()) };
-			container.push_back(std::move(castedFrom->get(index)));
+			container.push_back(std::move(castedFrom->get(_index)));
 		}
 
 		void swapComponents(size_t first, size_t second) override {
@@ -105,12 +105,12 @@ namespace Byte {
 			return std::make_unique<Accessor>();
 		}
 
-		Component& get(size_t index) {
-			return container.at(index);
+		Component& get(size_t _index) {
+			return container.at(_index);
 		}
 
-		const Component& get(size_t index) const {
-			return container.at(index);
+		const Component& get(size_t _index) const {
+			return container.at(_index);
 		}
 
 		void pushBack(const Component& component) {
