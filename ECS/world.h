@@ -276,7 +276,7 @@ namespace Byte {
 			}
 
 			Iterator end() {
-				return Iterator{ _archeVector, 0, _archeVector.size() };
+				return Iterator{ _archeVector, _archeVector.size(), 0 };
 			}
 
 			template<typename... _Components>
