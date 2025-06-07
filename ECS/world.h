@@ -309,9 +309,9 @@ namespace Byte {
 
 		};
 
-		template<typename... QueryComponents>
-		View<QueryComponents...> components() {
-			return View<QueryComponents...>{ *this };
+		template<typename... Components>
+		View<Components...> components() {
+			return View<Components...>{ *this };
 		}
 
 	};
