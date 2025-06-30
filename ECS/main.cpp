@@ -21,7 +21,7 @@ int main() {
     auto view{ world.components<EntityID, int>() };
 
     for (auto [id, i] : view) {
-        std::cout << id << " " << i << std::endl;
+        std::cout << id.id << " " << i << std::endl;
     }
 
     return 0;

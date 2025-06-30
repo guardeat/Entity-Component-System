@@ -36,19 +36,48 @@ namespace Byte {
         }
     };
 
-	using EntityID = uint64_t;
+    struct EntityID {
+        uint64_t id{};
 
-	template<typename EntityID>
-	struct EntityIDGenerator {
-		inline static std::random_device rd;
-		inline static std::mt19937_64 generator;             
-		inline static std::uniform_int_distribution<uint64_t> distribution;
+        operator uint64_t() const {
+            return id;
+        }
 
-		static EntityID generate() {
-			return EntityID{ distribution(generator) };
-		}
-	};
+        operator bool() const {
+            return static_cast<bool>(id);
+        }
 
-	using World = _World<EntityID, EntityIDGenerator, shrink_vector, 1024>;
+        bool operator==(const EntityID& entity) const {
+            return entity.id == id;
+        }
+
+        bool operator!=(const EntityID& entity) const {
+            return entity.id != id;
+        }
+    };
+
+    template<typename EntityID>
+    struct EntityIDGenerator {
+        inline static std::random_device rd;
+        inline static std::mt19937_64 generator;
+        inline static std::uniform_int_distribution<uint64_t> distribution;
+
+        static EntityID generate() {
+            return EntityID{ distribution(generator) };
+        }
+    };
+
+    using World = _World<EntityID, EntityIDGenerator, shrink_vector, 1024>;
+
+}
+
+namespace std {
+
+    template<>
+    struct hash<Byte::EntityID> {
+        size_t operator()(const Byte::EntityID& entity) const noexcept {
+            return std::hash<uint64_t>{}(entity.id);
+        }
+    };
 
 }
