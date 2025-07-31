@@ -10,7 +10,7 @@ int main() {
     auto start = std::chrono::high_resolution_clock::now();
 
     for (size_t i{}; i < 1000; ++i) {
-        world.createEntity(static_cast<int>(i));
+        world.create(static_cast<int>(i));
     }
 
     auto end = std::chrono::high_resolution_clock::now();

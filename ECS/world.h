@@ -58,27 +58,27 @@ namespace Byte {
 
 		_World& operator=(_World&& right) noexcept = default;
 
-		EntityID createEntity() {
+		EntityID create() {
 			EntityID id{ EntityIDGenerator::generate() };
 			_entities.emplace(id,EntityData{});
 			return id;
 		}
 
 		template<typename Component, typename... Components>
-		EntityID createEntity(Component&& component, Components&&... components) {
-			EntityID out{ createEntity() };
+		EntityID create(Component&& component, Components&&... components) {
+			EntityID out{ create() };
 			attach(out, std::forward<Component>(component), std::forward<Components>(components)...);
 			return out;
 		}
 
-		void destroyEntity(EntityID id) {
+		void destroy(EntityID id) {
 			EntityData& data{ _entities.at(id) };
 			data.arche->erase(data._index);
 			_entities.erase(id);
 		}
 
-		EntityID copyEntity(EntityID source) {
-			EntityID out{ createEntity() };
+		EntityID clone(EntityID source) {
+			EntityID out{ create() };
 			EntityData& sourceData{ _entities.at(source) };
 			sourceData.arche->copyEntity(sourceData._index, out, *sourceData.arche);
 			_entities.at(out).arche = sourceData.arche;
