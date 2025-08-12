@@ -307,6 +307,8 @@ namespace Byte {
 				}
 
 				_archeVector = newArches;
+
+				return *this;
 			}
 
 		};
