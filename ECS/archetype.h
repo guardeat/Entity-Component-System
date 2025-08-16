@@ -173,7 +173,7 @@ namespace Byte {
 			Archetype out{ build<Components...>() };
 
 			for (auto& pair : source._accessors) {
-				out._accessors[pair.first] = pair.second->instance();
+				out._accessors[pair.first] = pair.second->clone();
 				out._signature.set(pair.first);
 			}
 			return out;
@@ -186,7 +186,7 @@ namespace Byte {
 
 			for (auto& pair : source._accessors) {
 				if (pair.first != without) {
-					out._accessors[pair.first] = pair.second->instance();
+					out._accessors[pair.first] = pair.second->clone();
 				}
 			}
 			return out;

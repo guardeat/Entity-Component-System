@@ -41,7 +41,7 @@ namespace Byte {
 
 		virtual void clear() = 0;
 
-		virtual UAccessor<Container> instance() const = 0;
+		virtual UAccessor<Container> clone() const = 0;
 
 		template<typename Component>
 		Accessor<Component, Container>& receive() {
@@ -101,7 +101,7 @@ namespace Byte {
 			container.clear();
 		}
 
-		UAccessor<Container> instance() const override {
+		UAccessor<Container> clone() const override {
 			return std::make_unique<Accessor>();
 		}
 
