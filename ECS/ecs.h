@@ -39,11 +39,11 @@ namespace Byte {
     struct EntityID {
         uint64_t id{};
 
-        operator uint64_t() const {
+        explicit operator uint64_t() const {
             return id;
         }
 
-        operator bool() const {
+        explicit operator bool() const {
             return static_cast<bool>(id);
         }
 
