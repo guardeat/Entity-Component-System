@@ -13,7 +13,7 @@ namespace Byte {
 	public:
 		inline static constexpr size_t MAX_COMPONENT_COUNT{ _MAX_COMPONENT_COUNT };
 		inline static constexpr size_t BITSET_SIZE{ 64 };
-		inline static constexpr size_t BITSET_COUNT{ MAX_COMPONENT_COUNT / BITSET_SIZE + 1 };
+		inline static constexpr size_t BITSET_COUNT{ (MAX_COMPONENT_COUNT + BITSET_SIZE - 1) / BITSET_SIZE };
 
 		using Bitset = std::bitset<BITSET_SIZE>;
 		using BitsetArray = std::array<Bitset, BITSET_COUNT>;
@@ -41,7 +41,7 @@ namespace Byte {
 
 		bool matches(const Signature& signature) const {
 			for (size_t _index{}; _index < BITSET_COUNT; ++_index) {
-				if ((_bitsets[_index] & signature._bitsets[_index]) > 0) {
+				if ((_bitsets[_index] & signature._bitsets[_index]).any()) {
 					return true;
 				}
 			}
@@ -72,14 +72,14 @@ namespace Byte {
 
 		Signature operator+(const Signature& other) const {
 			Signature out;
-			for (size_t i = 0; i < BITSET_COUNT; ++i) {
+			for (size_t i{}; i < BITSET_COUNT; ++i) {
 				out._bitsets[i] = _bitsets[i] | other._bitsets[i];
 			}
 			return out;
 		}
 
 		Signature& operator+=(const Signature& other) {
-			for (size_t i = 0; i < BITSET_COUNT; ++i) {
+			for (size_t i{}; i < BITSET_COUNT; ++i) {
 				_bitsets[i] |= other._bitsets[i];
 			}
 			return *this;

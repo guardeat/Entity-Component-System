@@ -291,6 +291,8 @@ namespace Byte {
 				}
 
 				_archeVector = newArches;
+
+				return *this;
 			}
 
 			template<typename... _Components>
@@ -305,6 +307,8 @@ namespace Byte {
 				}
 
 				_archeVector = newArches;
+
+				return *this;
 			}
 
 		};
