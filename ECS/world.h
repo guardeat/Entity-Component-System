@@ -67,7 +67,10 @@ namespace Byte {
 		template<typename Component, typename... Components>
 		EntityID create(Component&& component, Components&&... components) {
 			EntityID out{ create() };
-			attach(out, std::forward<Component>(component), std::forward<Components>(components)...);
+
+			attach(out,
+				std::forward<Component>(component),
+				std::forward<Components>(components)...);
 			return out;
 		}
 
@@ -123,8 +126,8 @@ namespace Byte {
 				newIndex = newArche->pushEntity(id);
 			}
 
-			newArche->pushComponent<Component>(std::forward<Component>(component));
-			(newArche->pushComponent<Components>(std::forward<Components>(components)), ...);
+			newArche->pushComponent(std::forward<Component>(component));
+			(newArche->pushComponent(std::forward<Components>(components)), ...);
 
 			data.arche = newArche;
 			data._index = newIndex;

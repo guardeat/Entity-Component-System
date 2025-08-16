@@ -113,12 +113,9 @@ namespace Byte {
 			return container.at(_index);
 		}
 
-		void pushBack(const Component& component) {
-			container.push_back(component);
-		}
-
+		template<typename Component>
 		void pushBack(Component&& component) {
-			container.push_back(std::move(component));
+			container.push_back(std::forward<Component>(component));
 		}
 		
 		template<typename... Args>

@@ -14,13 +14,15 @@ namespace Byte {
     public:
         using std::vector<Type>::vector;
 
-        void push_back(const Type& value) {
-            std::vector<Type>::push_back(value);
-        }
-
         void pop_back() {
             std::vector<Type>::pop_back();
             check_shrink();
+        }
+
+        typename std::vector<Type>::iterator erase(typename std::vector<Type>::iterator pos) {
+            auto it{ std::vector<Type>::erase(pos) };
+            check_shrink();
+            return it;
         }
 
         void resize(size_t new_size) {

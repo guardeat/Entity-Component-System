@@ -58,28 +58,32 @@ namespace Byte {
 		}
 
 		size_t pushEntity(EntityID id) {
-			pushComponent(std::move(id));
+			pushComponent(id);
 			return size() - 1;
 		}
 
 		template<typename Component>
 		void pushComponent(Component&& component) {
-			_accessors[Registry<Component>::id()]->receive<Component>().pushBack(std::move(component));
+			_accessors[Registry<std::decay_t<Component>>::id()]
+				->receive<std::decay_t<Component>>().pushBack(std::forward<Component>(component));
 		}
 
 		template<typename Component, typename... Args>
 		void emplaceComponent(Args&&... args) {
-			_accessors[Registry<Component>::id()]->receive<Component>().emplaceBack(std::forward<Args>(args)...);
+			_accessors[Registry<std::decay_t<Component>>::id()]
+				->receive<std::decay_t<Component>>().emplaceBack(std::forward<Args>(args)...);
 		}
 
 		template<typename Component>
 		Component& getComponent(size_t _index) {
-			return _accessors[Registry<Component>::id()]->receive<Component>().get(_index);
+			return _accessors[Registry<std::decay_t<Component>>::id()]
+				->receive<std::decay_t<Component>>().get(_index);
 		}
 
 		template<typename Component>
 		const Component& getComponent(size_t _index) const {
-			return _accessors[Registry<Component>::id()]->receive<Component>().get(_index);
+			return _accessors[Registry<std::decay_t<Component>>::id()]
+				->receive<std::decay_t<Component>>().get(_index);
 		}
 
 		EntityID erase(size_t _index) {
@@ -145,8 +149,9 @@ namespace Byte {
 
 		template<typename Component>
 		void emplaceAccessor() {
-			_accessors.emplace(Registry<Component>::id(), std::make_unique<Accessor<Component>>());
-			_signature.set(Registry<Component>::id());
+			_accessors.emplace(
+				Registry<std::decay_t<Component>>::id(), std::make_unique<Accessor<std::decay_t<Component>>>());
+			_signature.set(Registry<std::decay_t<Component>>::id());
 		}
 
 		void eraseAccessor(ComponentID id) {
@@ -163,7 +168,7 @@ namespace Byte {
 		template<typename... Components>
 		static Archetype build() {
 			Archetype out;
-			((out.emplaceAccessor<Components>()), ...);
+			((out.emplaceAccessor<std::decay_t<Components>>()), ...);
 
 			return out;
 		}
